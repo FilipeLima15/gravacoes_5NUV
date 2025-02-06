@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Dropdown com Link</title>
+</head>
+<body class="flex items-center justify-center h-screen bg-gray-100">
+    <div class="bg-white p-8 rounded-xl shadow-xl w-96 text-center">
+        <label for="salaDropdown" class="block text-lg font-semibold text-gray-700 mb-3">Selecione um horário</label>
+        <select id="salaDropdown" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-gray-500 focus:outline-none">
+            <option value="">-- Escolha um horário --</option>
+            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="odd:bg-blue-200">Sala 1 - 13h</option>
+            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="even:bg-green-200">Sala 1 - 14h</option>
+            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="odd:bg-blue-200">Sala 1 - 15h</option>
+            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="even:bg-green-200">Sala 1 - 16h</option>
+            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="odd:bg-blue-200">Sala 1 - 17h</option>
+            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="even:bg-green-200">Sala 2 - 13h</option>
+            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="odd:bg-blue-200">Sala 2 - 14h</option>
+            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="even:bg-green-200">Sala 2 - 15h</option>
+            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="odd:bg-blue-200">Sala 2 - 16h</option>
+            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="even:bg-green-200">Sala 2 - 17h</option>
+        </select>
+        <div id="linkContainer" class="mt-6 hidden p-4 bg-gray-200 rounded-lg border border-gray-400 text-left">
+            <p class="text-gray-700 font-medium mb-2">Link Selecionado:</p>
+            <a id="salaLink" href="#" target="_blank" class="block text-blue-600 font-semibold break-words hover:underline">Abrir Link</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("salaDropdown").addEventListener("change", function() {
+            var link = this.value;
+            var linkContainer = document.getElementById("linkContainer");
+            var salaLink = document.getElementById("salaLink");
+            
+            if (link) {
+                salaLink.href = link;
+                salaLink.textContent = link;
+                linkContainer.classList.remove("hidden");
+            } else {
+                linkContainer.classList.add("hidden");
+            }
+        });
+    </script>
+</body>
+</html>
