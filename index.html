@@ -4,24 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Dropdown com Link</title>
+    <title>Dropdown com Filtro</title>
+    <style>
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            border: 1px solid #ccc;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            background-color: white;
+            z-index: 10;
+        }
+        .dropdown-content.visible {
+            display: block;
+        }
+    </style>
 </head>
 <body class="flex items-center justify-center h-screen bg-gray-100">
-    <div class="bg-white p-8 rounded-xl shadow-xl w-96 text-center">
+    <div class="bg-white p-8 rounded-xl shadow-xl w-96 text-center relative">
         <label for="salaDropdown" class="block text-lg font-semibold text-gray-700 mb-3">Selecione um horário</label>
-        <select id="salaDropdown" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-gray-500 focus:outline-none">
-            <option value="">-- Escolha um horário --</option>
-            <option value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2FCEJUSC%20JEC%20BSB%20sala%2001%20%2D%2013h00%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 1 - 13h</option>
-            <option value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2F14h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 1 - 14h</option>
-            <option value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2F15h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 1 - 15h</option>
-            <option value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2F16h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 1 - 16h</option>
-            <option value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2F17h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 1 - 17h</option>
-            <option value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F13h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 2 - 13h</option>
-            <option value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F14h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 2 - 14h</option>
-            <option value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F15h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 2 - 15h</option>
-            <option value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F16h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 2 - 16h</option>
-            <option value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F17h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 2 - 17h</option>
-        </select>
+        <input id="salaInput" type="text" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-gray-500 focus:outline-none" placeholder="Digite para filtrar...">
+
+        <div id="dropdownContent" class="dropdown-content mt-1">
+            <div class="dropdown-item" data-value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2FCEJUSC%20JEC%20BSB%20sala%2001%20%2D%2013h00%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 1 - 13h</div>
+            <div class="dropdown-item" data-value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2F14h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 1 - 14h</div>
+            <div class="dropdown-item" data-value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2F15h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 1 - 15h</div>
+            <div class="dropdown-item" data-value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2F16h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 1 - 16h</div>
+            <div class="dropdown-item" data-value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2F17h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 1 - 17h</div>
+            <div class="dropdown-item" data-value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F13h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 2 - 13h</div>
+            <div class="dropdown-item" data-value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F14h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 2 - 14h</div>
+            <div class="dropdown-item" data-value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F15h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 2 - 15h</div>
+            <div class="dropdown-item" data-value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F16h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 2 - 16h</div>
+            <div class="dropdown-item" data-value="https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F17h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0">Sala 2 - 17h</div>
+        </div>
+        
         <div id="linkContainer" class="mt-6 hidden p-4 bg-gray-200 rounded-lg border border-gray-400 text-left">
             <p class="text-gray-700 font-medium mb-2">Link Selecionado:</p>
             <a id="salaLink" href="#" target="_blank" class="block text-blue-600 font-semibold break-words hover:underline">Abrir Link</a>
@@ -29,18 +46,41 @@
     </div>
 
     <script>
-        document.getElementById("salaDropdown").addEventListener("change", function() {
-            var link = this.value;
-            var linkContainer = document.getElementById("linkContainer");
-            var salaLink = document.getElementById("salaLink");
+        const input = document.getElementById("salaInput");
+        const dropdownContent = document.getElementById("dropdownContent");
+        const dropdownItems = document.querySelectorAll(".dropdown-item");
+        const linkContainer = document.getElementById("linkContainer");
+        const salaLink = document.getElementById("salaLink");
+
+        input.addEventListener("input", function() {
+            const filter = input.value.toLowerCase();
+            let visibleCount = 0;
             
-            if (link) {
-                salaLink.href = link;
-                salaLink.textContent = link;
-                linkContainer.classList.remove("hidden");
+            dropdownItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(filter)) {
+                    item.classList.remove("hidden");
+                    visibleCount++;
+                } else {
+                    item.classList.add("hidden");
+                }
+            });
+
+            if (visibleCount > 0) {
+                dropdownContent.classList.add("visible");
             } else {
-                linkContainer.classList.add("hidden");
+                dropdownContent.classList.remove("visible");
             }
+        });
+
+        // Lidar com a seleção do item
+        dropdownItems.forEach(item => {
+            item.addEventListener("click", function () {
+                salaInput.value = item.textContent; // Exibe o nome da sala no input
+                dropdownContent.classList.remove("visible"); // Fecha o dropdown
+                // Você pode pegar o link com item.dataset.value, se necessário
+                console.log("Link selecionado:", item.dataset.value); // Exibe o link selecionado no console
+            });
         });
     </script>
 </body>
