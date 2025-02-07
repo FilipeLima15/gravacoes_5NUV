@@ -5,183 +5,198 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilos para as classes impar e par */
-        .sala-impar {
-            color: #ef4444; /* Vermelho */
-        }
-        .sala-par {
-            color: #3b82f6; /* Azul */
-        }
+        .sala-impar { background-color: #f3f4f6; } /* Cinza claro */
+        .sala-par { background-color: #ffffff; } /* Branco */
     </style>
-    <title>Dropdown com Link</title>
+    <title>Seleção de Salas</title>
 </head>
 <body class="flex items-center justify-center h-screen bg-gray-100">
     <div class="bg-white p-8 rounded-xl shadow-xl w-96 text-center">
-        <label for="salaDropdown" class="block text-lg font-semibold text-gray-700 mb-3">Selecione um horário</label>
-        <select id="salaDropdown" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-gray-500 focus:outline-none">
+        <label for="salaDropdown" class="block text-lg font-semibold text-gray-700 mb-3">
+            Selecione um horário:
+        </label>
+        
+        <select id="salaDropdown" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-gray-500 focus:outline-none transition">
             <option value="">-- Escolha um horário --</option>
-            
-            <!-- Sala 1 -->
-            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="sala-impar">Sala 1 - 13h</option>
-            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="sala-impar">Sala 1 - 14h</option>
-            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="sala-impar">Sala 1 - 15h</option>
-            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="sala-impar">Sala 1 - 16h</option>
-            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="sala-impar">Sala 1 - 17h</option>
-
-            <!-- Sala 2 -->
-            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="sala-par">Sala 2 - 13h</option>
-            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="sala-par">Sala 2 - 14h</option>
-            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="sala-par">Sala 2 - 15h</option>
-            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="sala-par">Sala 2 - 16h</option>
-            <option value="https://tjdf.sharepoint.com/:x:/r/sites/5NUVIMEC/_layouts/15/Doc.aspx?sourcedoc=%7BB98D603A-4B5D-4A7A-96C2-A9B45CFF9C23%7D&file=02%20-%20Fevereiro%20-%202025%205NUV.xlsx&action=default&mobileredirect=true" class="sala-par">Sala 2 - 17h</option>
-
-            <!-- Sala 3 -->
-            <option value="" class="sala-impar">Sala 3 - 13h</option>
-            <option value="" class="sala-impar">Sala 3 - 14h</option>
-            <option value="" class="sala-impar">Sala 3 - 15h</option>
-            <option value="" class="sala-impar">Sala 3 - 16h</option>
-            <option value="" class="sala-impar">Sala 3 - 17h</option>
-
-            <!-- Sala 4 -->
-            <option value="" class="sala-par">Sala 4 - 13h</option>
-            <option value="" class="sala-par">Sala 4 - 14h</option>
-            <option value="" class="sala-par">Sala 4 - 15h</option>
-            <option value="" class="sala-par">Sala 4 - 16h</option>
-            <option value="" class="sala-par">Sala 4 - 17h</option>
-
-            <!-- Sala 5 -->
-            <option value="" class="sala-impar">Sala 5 - 13h</option>
-            <option value="" class="sala-impar">Sala 5 - 14h</option>
-            <option value="" class="sala-impar">Sala 5 - 15h</option>
-            <option value="" class="sala-impar">Sala 5 - 16h</option>
-            <option value="" class="sala-impar">Sala 5 - 17h</option>
-
-            <!-- Sala 6 -->
-            <option value="" class="sala-par">Sala 6 - 13h</option>
-            <option value="" class="sala-par">Sala 6 - 14h</option>
-            <option value="" class="sala-par">Sala 6 - 15h</option>
-            <option value="" class="sala-par">Sala 6 - 16h</option>
-            <option value="" class="sala-par">Sala 6 - 17h</option>
-
-            <!-- Sala 7 -->
-            <option value="" class="sala-impar">Sala 7 - 13h</option>
-            <option value="" class="sala-impar">Sala 7 - 14h</option>
-            <option value="" class="sala-impar">Sala 7 - 15h</option>
-            <option value="" class="sala-impar">Sala 7 - 16h</option>
-            <option value="" class="sala-impar">Sala 7 - 17h</option>
-
-            <!-- Sala 8 -->
-            <option value="" class="sala-par">Sala 8 - 13h</option>
-            <option value="" class="sala-par">Sala 8 - 14h</option>
-            <option value="" class="sala-par">Sala 8 - 15h</option>
-            <option value="" class="sala-par">Sala 8 - 16h</option>
-            <option value="" class="sala-par">Sala 8 - 17h</option>
-
-            <!-- Sala 9 -->
-            <option value="" class="sala-impar">Sala 9 - 13h</option>
-            <option value="" class="sala-impar">Sala 9 - 14h</option>
-            <option value="" class="sala-impar">Sala 9 - 15h</option>
-            <option value="" class="sala-impar">Sala 9 - 16h</option>
-            <option value="" class="sala-impar">Sala 9 - 17h</option>
-
-            <!-- Sala 10 -->
-            <option value="" class="sala-par">Sala 10 - 13h</option>
-            <option value="" class="sala-par">Sala 10 - 14h</option>
-            <option value="" class="sala-par">Sala 10 - 15h</option>
-            <option value="" class="sala-par">Sala 10 - 16h</option>
-            <option value="" class="sala-par">Sala 10 - 17h</option>
-
-            <!-- Sala 11 -->
-            <option value="" class="sala-impar">Sala 11 - 13h</option>
-            <option value="" class="sala-impar">Sala 11 - 14h</option>
-            <option value="" class="sala-impar">Sala 11 - 15h</option>
-            <option value="" class="sala-impar">Sala 11 - 16h</option>
-            <option value="" class="sala-impar">Sala 11 - 17h</option>
-
-            <!-- Sala 12 -->
-            <option value="" class="sala-par">Sala 12 - 13h</option>
-            <option value="" class="sala-par">Sala 12 - 14h</option>
-            <option value="" class="sala-par">Sala 12 - 15h</option>
-            <option value="" class="sala-par">Sala 12 - 16h</option>
-            <option value="" class="sala-par">Sala 12 - 17h</option>
-
-            <!-- Sala 13 -->
-            <option value="" class="sala-impar">Sala 13 - 13h</option>
-            <option value="" class="sala-impar">Sala 13 - 14h</option>
-            <option value="" class="sala-impar">Sala 13 - 15h</option>
-            <option value="" class="sala-impar">Sala 13 - 16h</option>
-            <option value="" class="sala-impar">Sala 13 - 17h</option>
-
-            <!-- Sala 14 -->
-            <option value="" class="sala-par">Sala 14 - 13h</option>
-            <option value="" class="sala-par">Sala 14 - 14h</option>
-            <option value="" class="sala-par">Sala 14 - 15h</option>
-            <option value="" class="sala-par">Sala 14 - 16h</option>
-            <option value="" class="sala-par">Sala 14 - 17h</option>
-
-            <!-- Sala 15 -->
-            <option value="" class="sala-impar">Sala 15 - 13h</option>
-            <option value="" class="sala-impar">Sala 15 - 14h</option>
-            <option value="" class="sala-impar">Sala 15 - 15h</option>
-            <option value="" class="sala-impar">Sala 15 - 16h</option>
-            <option value="" class="sala-impar">Sala 15 - 17h</option>
-
-            <!-- Sala 16 -->
-            <option value="" class="sala-par">Sala 16 - 13h</option>
-            <option value="" class="sala-par">Sala 16 - 14h</option>
-            <option value="" class="sala-par">Sala 16 - 15h</option>
-            <option value="" class="sala-par">Sala 16 - 16h</option>
-            <option value="" class="sala-par">Sala 16 - 17h</option>
-
-            <!-- Sala 17 -->
-            <option value="" class="sala-impar">Sala 17 - 13h</option>
-            <option value="" class="sala-impar">Sala 17 - 14h</option>
-            <option value="" class="sala-impar">Sala 17 - 15h</option>
-            <option value="" class="sala-impar">Sala 17 - 16h</option>
-            <option value="" class="sala-impar">Sala 17 - 17h</option>
-
-            <!-- Sala 18 -->
-            <option value="" class="sala-par">Sala 18 - 13h</option>
-            <option value="" class="sala-par">Sala 18 - 14h</option>
-            <option value="" class="sala-par">Sala 18 - 15h</option>
-            <option value="" class="sala-par">Sala 18 - 16h</option>
-            <option value="" class="sala-par">Sala 18 - 17h</option>
-
-            <!-- Sala 19 -->
-            <option value="" class="sala-impar">Sala 19 - 13h</option>
-            <option value="" class="sala-impar">Sala 19 - 14h</option>
-            <option value="" class="sala-impar">Sala 19 - 15h</option>
-            <option value="" class="sala-impar">Sala 19 - 16h</option>
-            <option value="" class="sala-impar">Sala 19 - 17h</option>
-
-            <!-- Sala 20 -->
-            <option value="" class="sala-par">Sala 20 - 13h</option>
-            <option value="" class="sala-par">Sala 20 - 14h</option>
-            <option value="" class="sala-par">Sala 20 - 15h</option>
-            <option value="" class="sala-par">Sala 20 - 16h</option>
-            <option value="" class="sala-par">Sala 20 - 17h</option>
-        
-        
-        
         </select>
-        <div id="linkContainer" class="mt-6 hidden p-4 bg-gray-200 rounded-lg border border-gray-400 text-left">
+
+        <div id="linkContainer" class="mt-6 hidden p-4 bg-gray-200 rounded-lg border border-gray-400 text-left transition-opacity duration-300">
             <p class="text-gray-700 font-medium mb-2">Clique aqui para acessar a pasta:</p>
-            <a id="salaLink" href="#" target="_blank" class="block text-blue-600 font-semibold break-words hover:underline">Clique aqui para acessar pasta</a>
+            <a id="salaLink" href="#" target="_blank" class="block text-blue-600 font-semibold break-words hover:underline transition-all">
+                Clique aqui para acessar pasta
+            </a>
         </div>
     </div>
 
     <script>
-        document.getElementById("salaDropdown").addEventListener("change", function() {
-            var link = this.value;
-            var linkContainer = document.getElementById("linkContainer");
-            var salaLink = document.getElementById("salaLink");
-            
-            if (link) {
-                salaLink.href = link;
-                linkContainer.classList.remove("hidden");
-            } else {
-                linkContainer.classList.add("hidden");
-            }
+        document.addEventListener("DOMContentLoaded", function() {
+            const dropdown = document.getElementById("salaDropdown");
+            const linkContainer = document.getElementById("linkContainer");
+            const salaLink = document.getElementById("salaLink");
+
+            // Lista de salas com os links embutidos
+            const salaLinks = {
+                "Sala 1 - 13h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2FCEJUSC%20JEC%20BSB%20sala%2001%20%2D%2013h00%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+                "Sala 1 - 14h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2F14h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+                "Sala 1 - 15h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2F15h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+                "Sala 1 - 16h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2F16h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+                "Sala 1 - 17h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala01%2FDocumentos%20Compartilhados%2F17h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+                "Sala 2 - 13h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F13h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+                "Sala 2 - 14h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F14h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+                "Sala 2 - 15h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F15h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+                "Sala 2 - 16h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F16h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+                "Sala 2 - 17h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA&id=%2Fsites%2FCEJUSCJECBSBsala02%2FDocumentos%20Compartilhados%2F17h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+                "Sala 3 - 13h": null,
+                "Sala 3 - 14h": null,
+                "Sala 3 - 15h": null,
+                "Sala 3 - 16h": null,
+                "Sala 3 - 17h": null,
+                "Sala 4 - 13h": null,
+                "Sala 4 - 14h": null,
+                "Sala 4 - 15h": null,
+                "Sala 4 - 16h": null,
+                "Sala 4 - 17h": null,
+                "Sala 5 - 13h": null,
+                "Sala 5 - 14h": null,
+                "Sala 5 - 15h": null,
+                "Sala 5 - 16h": null,
+                "Sala 5 - 17h": null,
+                "Sala 6 - 13h": null,
+                "Sala 6 - 14h": null,
+                "Sala 6 - 15h": null,
+                "Sala 6 - 16h": null,
+                "Sala 6 - 17h": null,
+                "Sala 7 - 13h": null,
+                "Sala 7 - 14h": null,
+                "Sala 7 - 15h": null,
+                "Sala 7 - 16h": null,
+                "Sala 7 - 17h": null,
+                "Sala 8 - 13h": null,
+                "Sala 8 - 14h": null,
+                "Sala 8 - 15h": null,
+                "Sala 8 - 16h": null,
+                "Sala 8 - 17h": null,
+                "Sala 9 - 13h": null,
+                "Sala 9 - 14h": null,
+                "Sala 9 - 15h": null,
+                "Sala 9 - 16h": null,
+                "Sala 9 - 17h": null,
+                "Sala 10 - 13h": null,
+                "Sala 10 - 14h": null,
+                "Sala 10 - 15h": null,
+                "Sala 10 - 16h": null,
+                "Sala 10 - 17h": null,
+                "Sala 11 - 13h": null,
+                "Sala 11 - 14h": null,
+                "Sala 11 - 15h": null,
+                "Sala 11 - 16h": null,
+                "Sala 11 - 17h": null,
+                "Sala 12 - 13h": null,
+                "Sala 12 - 14h": null,
+                "Sala 12 - 15h": null,
+                "Sala 12 - 16h": null,
+                "Sala 12 - 17h": null,
+                "Sala 12 - 13h": null,
+                "Sala 12 - 14h": null,
+                "Sala 12 - 15h": null,
+                "Sala 12 - 16h": null,
+                "Sala 12 - 17h": null,
+                "Sala 13 - 13h": null,
+                "Sala 13 - 14h": null,
+                "Sala 13 - 15h": null,
+                "Sala 13 - 16h": null,
+                "Sala 13 - 17h": null,
+                "Sala 14 - 13h": null,
+                "Sala 14 - 14h": null,
+                "Sala 14 - 15h": null,
+                "Sala 14 - 16h": null,
+                "Sala 14 - 17h": null,
+                "Sala 15 - 13h": null,
+                "Sala 15 - 14h": null,
+                "Sala 15 - 15h": null,
+                "Sala 15 - 16h": null,
+                "Sala 15 - 17h": null,
+                "Sala 16 - 13h": null,
+                "Sala 16 - 14h": null,
+                "Sala 16 - 15h": null,
+                "Sala 16 - 16h": null,
+                "Sala 16 - 17h": null,
+                "Sala 17 - 13h": null,
+                "Sala 17 - 14h": null,
+                "Sala 17 - 15h": null,
+                "Sala 17 - 16h": null,
+                "Sala 17 - 17h": null,
+                "Sala 18 - 13h": null,
+                "Sala 18 - 14h": null,
+                "Sala 18 - 15h": null,
+                "Sala 18 - 16h": null,
+                "Sala 18 - 17h": null,
+                "Sala 19 - 13h": null,
+                "Sala 19 - 14h": null,
+                "Sala 19 - 15h": null,
+                "Sala 19 - 16h": null,
+                "Sala 19 - 17h": null,
+                "Sala 20 - 13h": null,
+                "Sala 20 - 14h": null,
+                "Sala 20 - 15h": null,
+                "Sala 20 - 16h": null,
+                "Sala 20 - 17h": null,
+                "Remarcações 1 - 13h": null,
+                "Remarcações 1 - 14h": null,
+                "Remarcações 1 - 15h": null,
+                "Remarcações 1 - 16h": null,
+                "Remarcações 1 - 17h": null,
+                "Remarcações 2 - 13h": null,
+                "Remarcações 2 - 14h": null,
+                "Remarcações 2 - 15h": null,
+                "Remarcações 2 - 16h": null,
+                "Remarcações 2 - 17h": null,
+                "Remarcações 3 - 13h": null,
+                "Remarcações 3 - 14h": null,
+                "Remarcações 3 - 15h": null,
+                "Remarcações 3 - 16h": null,
+                "Remarcações 3 - 17h": null,
+                "Remarcações 4 - 13h": null,
+                "Remarcações 4 - 14h": null,
+                "Remarcações 4 - 15h": null,
+                "Remarcações 4 - 16h": null,
+                "Remarcações 4 - 17h": null,
+                "Remarcações 5 - 13h": null,
+                "Remarcações 5 - 14h": null,
+                "Remarcações 5 - 15h": null,
+                "Remarcações 5 - 16h": null,
+                "Remarcações 5 - 17h": null,
+            };
+
+            // Renderiza as opções do select
+            Object.entries(salaLinks).forEach(([sala, link]) => {
+                let option = document.createElement("option");
+                option.value = link || "#"; // Se não houver link, mantém #
+
+                // Extrai o número correto da sala (antes do primeiro "-")
+                let salaNumeroMatch = sala.match(/(\d+)/g); // Pega todos os números
+                let salaNumero = salaNumeroMatch ? parseInt(salaNumeroMatch[0], 10) : 0; // Pega o primeiro número que aparece
+
+                // Define a cor de fundo conforme a paridade da sala
+                option.style.backgroundColor = salaNumero % 2 === 1 ? "#f3f4f6" : "#ffffff";
+
+                option.textContent = sala;
+                dropdown.appendChild(option);
+            });
+
+
+            // Exibir link ao selecionar uma opção
+            dropdown.addEventListener("change", function() {
+                const link = this.value;
+                if (link && link !== "#") {
+                    salaLink.href = link;
+                    linkContainer.classList.remove("hidden");
+                    linkContainer.classList.add("opacity-100");
+                } else {
+                    linkContainer.classList.add("hidden");
+                    linkContainer.classList.remove("opacity-100");
+                }
+            });
         });
     </script>
 </body>
