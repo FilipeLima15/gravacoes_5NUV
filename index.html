@@ -1,1 +1,436 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Seleção de Salas — Painel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Paleta simplificada */
+    :root{
+      --teal-dark: #0b5e52;
+      --teal:      #0ea5a4;
+      --red:       #dc2626;
+    }
+
+    .sala-impar { background-color: #f3f4f6; } /* Cinza claro */
+    .sala-par   { background-color: #ffffff; } /* Branco */
+
+    .toast { transform: translateY(12px); transition: all .28s ease; }
+
+    /* tentar forçar cor do opt-group visual */
+    option.group-label {
+      color: #0b5e52;
+      font-weight: 700;
+    }
+
+    /* fallback: se browser ignorar option color, estilizamos o select para realçar visualmente */
+    select.custom-highlight { color: #111; }
+
+    /* estilo do botão copiar (consistente em todos os browsers) */
+    .btn-copy {
+      background-color: var(--teal-dark);
+      color: #ffffff;
+      border: 1px solid var(--teal-dark);
+      font-weight: 600;
+      padding: .35rem .75rem;
+      border-radius: .5rem;
+    }
+
+    .btn-copy:active { transform: translateY(1px); }
+
+    /* forçar quebra de palavra no link */
+    a.break-link { word-break: break-word; }
+
+    /* força caret nativo no select */
+    select { appearance: auto; -webkit-appearance: auto; -moz-appearance: auto; }
+
+    /* cinza claro para opções sem gravação */
+    option.sem-gravacao {
+      color: #9ca3af; /* Tailwind gray-400 */
+      font-style: italic;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+  <div class="bg-white p-8 rounded-xl shadow-xl w-96 text-center">
+    <label for="salaDropdown" class="block text-lg font-semibold text-gray-700 mb-3">
+      Selecione uma das opções de "sala - horário":
+    </label>
+
+    <!-- Área de pesquisa + controles (acima do dropdown) -->
+    <div class="mb-4">
+      <input id="search" type="search" placeholder="Buscar sala ou horário (Ex: Sala 1, 13h)"
+             class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-gray-500 focus:outline-none transition mb-3" />
+
+      <div class="flex gap-2 justify-between">
+        <!-- espaço intencional: botões removidos -->
+      </div>
+    </div>
+
+    <!-- Dropdown -->
+    <select id="salaDropdown" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-gray-500 focus:outline-none transition custom-highlight" aria-label="Lista de salas e horários">
+      <!-- opções geradas dinamicamente -->
+    </select>
+
+    <!-- Container do link (abaixo do dropdown) -->
+    <div id="linkContainer" class="mt-4 hidden p-3 bg-gray-50 rounded-lg border border-gray-300 text-left transition-opacity duration-300">
+      <a id="salaLink" href="#" target="_blank" rel="noopener"
+        class="block w-full text-center text-blue-600 font-semibold break-link hover:underline transition-all">
+        Clique aqui para acessar pasta da gravação.
+      </a>
+
+      <div class="mt-3 flex gap-2 justify-center">
+        <button id="copyBtn" class="btn-copy text-sm">📋 Copiar link da pasta</button>
+      </div>
+
+      <p id="statusText" class="mt-2 text-sm text-gray-600"></p>
+    </div>
+
+    <p class="mt-4 text-red-600 font-semibold">SEMPRE deve abrir o vídeo e conferir se é o que procura!</p>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toastContainer" class="fixed right-6 bottom-6 z-50"></div>
+
+  <script>
+    // ========================= DADOS: edite aqui se desejar =========================
+    const salaLinks = {
+      "Sala 1 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala01%2FDocumentos%20Compartilhados%2FCEJUSC%20JEC%20BSB%20sala%2001%20%2D%2013h00%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0&csf=1&web=1&e=fTJxHx&CID=ac3b8ee2%2Da792%2D4291%2D9d54%2Dffd259b12f55&FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA",
+      "Sala 1 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala01%2FDocumentos%20Compartilhados%2F14h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0&csf=1&web=1&e=ciEtp5&CID=72393d1e%2Dbdfb%2D432d%2D8342%2Df8a8847c981b&FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA",
+      "Sala 1 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala01%2FDocumentos%20Compartilhados%2F15h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0&csf=1&web=1&e=3J4L98&CID=133349a2%2Dbc8f%2D4e63%2D8c2a%2D67ae08adbf42&FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA",
+      "Sala 1 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala01%2FDocumentos%20Compartilhados%2F16h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0&csf=1&web=1&e=PwibQ4&CID=a60dca0e%2D1f49%2D43c9%2D800c%2D6008970e8dc5&FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA",
+      "Sala 1 - 17h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala01/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala01%2FDocumentos%20Compartilhados%2F17h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0&csf=1&web=1&e=thWZs8&CID=b3591310%2D45f6%2D4791%2Db466%2Dfde69e46fbc2&FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA",
+
+      "Sala 2 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala02%2FDocumentos%20Compartilhados%2F13h00%20sala%2001%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0&csf=1&web=1&e=Lkgemu&CID=d14def14%2D5f3a%2D45eb%2D8f60%2Df5d62d6a030c&FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA",
+      "Sala 2 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala02%2FDocumentos%20Compartilhados%2F14h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0&csf=1&web=1&e=Lkgemu&CID=d14def14%2D5f3a%2D45eb%2D8f60%2Df5d62d6a030c&FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA",
+      "Sala 2 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala02%2FDocumentos%20Compartilhados%2F15h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0&csf=1&web=1&e=Lkgemu&CID=d14def14%2D5f3a%2D45eb%2D8f60%2Df5d62d6a030c&FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA",
+      "Sala 2 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala02%2FDocumentos%20Compartilhados%2F16h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0&csf=1&web=1&e=Lkgemu&CID=d14def14%2D5f3a%2D45eb%2D8f60%2Df5d62d6a030c&FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA",
+      "Sala 2 - 17h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala02/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala02%2FDocumentos%20Compartilhados%2F17h00%20sala%2002%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0&csf=1&web=1&e=Lkgemu&CID=d14def14%2D5f3a%2D45eb%2D8f60%2Df5d62d6a030c&FolderCTID=0x0120009C7067039D01F54DA84348DC289644DA",
+
+      "Sala 3 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala03/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados%2F13h00%20sala%2003%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 3 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala03/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados%2F14h00%20sala%2003%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 3 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala03/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados%2F15h00%20sala%2003%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 3 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala03/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados%2F16h00%20sala%2003%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 3 - 17h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala03/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados%2F17h00%20sala%2003%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala03%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+
+      "Sala 4 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala04/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados%2F13h00%20sala%2004%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 4 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala04/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados%2F14h00%20sala%2004%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 4 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala04/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados%2F15h00%20sala%2004%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 4 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala04/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados%2F16h00%20sala%2004%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 4 - 17h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala04/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados%2F17h00%20sala%2004%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala04%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+
+      "Sala 5 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala05/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados%2F13h00%20sala%2005%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 5 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala05/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados%2F14h00%20sala%2005%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 5 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala05/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados%2F15h00%20sala%2005%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 5 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala05/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados%2F16h00%20sala%2005%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 5 - 17h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala05/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados%2F17h00%20sala%2005%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala05%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+
+      "Sala 6 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala06/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados%2F13h00%20sala%2006%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 6 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala06/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados%2F14h00%20sala%2006%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 6 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala06/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados%2F15h00%20sala%2006%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 6 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala06/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados%2F16h00%20sala%2006%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 6 - 17h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala06/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados%2F17h00%20sala%2006%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala06%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+
+      "Sala 7 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala07/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala07%2FDocumentos%20Compartilhados%2F13h00%20sala%2007%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+      "Sala 7 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala07/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala07%2FDocumentos%20Compartilhados%2F14h00%20sala%2007%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+      "Sala 7 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala07/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala07%2FDocumentos%20Compartilhados%2F15h00%20sala%2007%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+      "Sala 7 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala07/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala07%2FDocumentos%20Compartilhados%2F16h00%20sala%2007%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+      "Sala 7 - 17h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala07/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala07%2FDocumentos%20Compartilhados%2F17h00%20sala%2007%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&viewid=348d11d8%2Db4c3%2D4295%2Dbe36%2Dfec8a3ea04f0",
+
+      "Sala 8 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala08/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados%2F13h00%20sala%2008%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 8 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala08/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados%2F14h00%20sala%2008%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 8 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala08/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados%2F15h00%20sala%2008%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 8 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala08/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados%2F16h00%20sala%2008%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 8 - 17h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala08/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados%2F17h00%20sala%2008%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala08%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+
+      "Sala 9 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala09/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados%2F13h00%20sala%2009%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 9 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala09/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados%2F14h00%20sala%2009%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 9 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala09/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados%2F15h00%20sala%2009%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 9 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala09/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados%2F16h00%20sala%2009%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 9 - 17h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala09/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados%2F17h00%20sala%2009%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala09%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+
+      "Sala 10 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala10/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados%2F13h00%20sala%2010%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 10 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala10/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados%2F14h00%20sala%2010%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 10 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala10/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados%2F15h00%20sala%2010%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 10 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala10/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados%2F16h00%20sala%2010%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 10 - 17h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala10/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados%2F17h00%20sala%2010%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala10%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+
+      "Sala 11 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala11/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala11%2FDocumentos%20Compartilhados%2F13h00%20sala%2011%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala11%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala11%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 11 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala11/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala11%2FDocumentos%20Compartilhados%2F14h00%20sala%2011%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala11%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala11%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 11 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala11/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala11%2FDocumentos%20Compartilhados%2F15h00%20sala%2011%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala11%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala11%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 11 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala11/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala11%2FDocumentos%20Compartilhados%2F16h00%20sala%2011%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala11%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala11%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 11 - 17h": "",
+
+      "Sala 12 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala12/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala12%2FDocumentos%20Compartilhados%2F13h00%20sala%2012%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala12%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala12%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 12 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala12/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala12%2FDocumentos%20Compartilhados%2F14h00%20sala%2012%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala12%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala12%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 12 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala12/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala12%2FDocumentos%20Compartilhados%2F15h00%20sala%2012%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala12%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala12%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 12 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala12/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala12%2FDocumentos%20Compartilhados%2F16h00%20sala%2012%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala12%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala12%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 12 - 17h": "",
+
+      "Sala 13 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala13/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala13%2FDocumentos%20Compartilhados%2F13h00%20sala%2013%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala13%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala13%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 13 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala13/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala13%2FDocumentos%20Compartilhados%2F14h00%20sala%2013%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala13%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala13%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 13 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala13/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala13%2FDocumentos%20Compartilhados%2F15h00%20sala%2013%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala13%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala13%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 13 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala13/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala13%2FDocumentos%20Compartilhados%2F16h00%20sala%2013%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala13%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala13%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 13 - 17h": "",
+
+      "Sala 14 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala14/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala14%2FDocumentos%20Compartilhados%2F13h00%20sala%2014%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala14%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala14%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 14 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala14/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala14%2FDocumentos%20Compartilhados%2F14h00%20sala%2014%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala14%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala14%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 14 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala14/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala14%2FDocumentos%20Compartilhados%2F15h00%20sala%2014%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala14%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala14%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 14 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala14/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala14%2FDocumentos%20Compartilhados%2F16h00%20sala%2014%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala14%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala14%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 14 - 17h": "",
+
+      "Sala 15 - 13h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala15/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala15%2FDocumentos%20Compartilhados%2F13h00%20sala%2015%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala15%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala15%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 15 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala15/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala15%2FDocumentos%20Compartilhados%2F14h00%20sala%2015%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala15%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala15%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 15 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala15/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala15%2FDocumentos%20Compartilhados%2F15h00%20sala%2015%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala15%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala15%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 15 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala15/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala15%2FDocumentos%20Compartilhados%2F16h00%20sala%2015%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala15%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala15%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 15 - 17h": "",
+
+      "Sala 16 - 13h": "",
+      "Sala 16 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala16/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala16%2FDocumentos%20Compartilhados%2F14h%20sala%2016%20CEJUSCJECBSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala16%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala16%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 16 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala16/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala16%2FDocumentos%20Compartilhados%2F15h%20sala%2016%20CEJUSCJECBSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala16%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala16%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 16 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala16/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala16%2FDocumentos%20Compartilhados%2F16h%20sala%2016%20CEJUSCJECBSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala16%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala16%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 16 - 17h": "",
+
+      "Sala 17 - 13h": "",
+      "Sala 17 - 14h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala17eSeguintes/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala17eSeguintes%2FDocumentos%20Compartilhados%2F14h%20sala%2017%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala17eSeguintes%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala17eSeguintes%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 17 - 15h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala17eSeguintes/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala17eSeguintes%2FDocumentos%20Compartilhados%2F15h%20sala%2017%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala17eSeguintes%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala17eSeguintes%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 17 - 16h": "https://tjdf.sharepoint.com/sites/e-CEJUSC3JECBSBsala17eSeguintes/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2Fe%2DCEJUSC3JECBSBsala17eSeguintes%2FDocumentos%20Compartilhados%2F16h%20sala%2017%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2Fe%2DCEJUSC3JECBSBsala17eSeguintes%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2Fe%2DCEJUSC3JECBSBsala17eSeguintes%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 17 - 17h": "",
+
+      "Sala 18 - 13h": "",
+      "Sala 18 - 14h": "https://tjdf.sharepoint.com/sites/eCEJUSC3/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FeCEJUSC3%2FDocumentos%20Compartilhados%2F14H%20%20Sala%2018%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2FeCEJUSC3%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2FeCEJUSC3%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 18 - 15h": "https://tjdf.sharepoint.com/sites/eCEJUSC3/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FeCEJUSC3%2FDocumentos%20Compartilhados%2F15h%20sala%2018%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2FeCEJUSC3%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2FeCEJUSC3%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 18 - 16h": "https://tjdf.sharepoint.com/sites/eCEJUSC3/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FeCEJUSC3%2FDocumentos%20Compartilhados%2F16H%20Sala%2018%20CEJUSC%20JEC%20BSB%2FRecordings&sortField=Modified&isAscending=false&newTargetListUrl=%2Fsites%2FeCEJUSC3%2FDocumentos%20Compartilhados&viewpath=%2Fsites%2FeCEJUSC3%2FDocumentos%20Compartilhados%2FForms%2FAllItems%2Easpx",
+      "Sala 18 - 17h": "",
+
+      "Sala 19 - 13h": "",
+      "Sala 19 - 14h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Sala19-14h/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DSala19%2D14h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=32d77c08%2Daf07%2D421c%2D9f68%2Dba1f40909508",
+      "Sala 19 - 15h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Sala19-15h/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DSala19%2D15h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=32d77c08%2Daf07%2D421c%2D9f68%2Dba1f40909508",
+      "Sala 19 - 16h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Sala19-16h/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DSala19%2D16h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=32d77c08%2Daf07%2D421c%2D9f68%2Dba1f40909508",
+      "Sala 19 - 17h": "",
+
+      "Sala 20 - 13h": "",
+      "Sala 20 - 14h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Sala20-14h/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DSala20%2D14h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=32d77c08%2Daf07%2D421c%2D9f68%2Dba1f40909508",
+      "Sala 20 - 15h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Sala20-15h/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DSala20%2D15h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=32d77c08%2Daf07%2D421c%2D9f68%2Dba1f40909508",
+      "Sala 20 - 16h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Sala20-16h/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DSala20%2D16h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=32d77c08%2Daf07%2D421c%2D9f68%2Dba1f40909508",
+      "Sala 20 - 17h": "",
+
+      "Sala 21 - 13h": "",
+      "Sala 21 - 14h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Sala21-14h/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DSala21%2D14h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=d8c55b02%2D3d82%2D44d1%2Da108%2D8fdc096b45f0",
+      "Sala 21 - 15h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Sala21-15h/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DSala21%2D15h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=d8c55b02%2D3d82%2D44d1%2Da108%2D8fdc096b45f0",
+      "Sala 21 - 16h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Sala21-16h/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DSala21%2D16h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=260a2d01%2D485f%2D4fc6%2D9b9e%2D70709103d70e",
+      "Sala 21 - 17h": "",
+
+      "Remarcações 1 - 13h": "",
+      "Remarcações 1 - 14h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala01-14h/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala01%2D14h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 1 - 15h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala01-15h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala01%2D15h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 1 - 16h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala01-16h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala01%2D16h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 1 - 17h": "",
+
+      "Remarcações 2 - 13h": "",
+      "Remarcações 2 - 14h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala02-14h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala02%2D14h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 2 - 15h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala02-15h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala02%2D15h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 2 - 16h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala02-16h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala02%2D16h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 2 - 17h": "",
+    
+      "Remarcações 3 - 13h": "",
+      "Remarcações 3 - 14h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala03-14h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala03%2D14h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 3 - 15h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala03-15h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala03%2D15h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 3 - 16h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala03-16h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala03%2D16h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 3 - 17h": "",
+
+      "Remarcações 4 - 13h": "",
+      "Remarcações 4 - 14h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala04-14h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala04%2D14h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 4 - 15h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala04-15h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala04%2D15h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 4 - 16h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala04-16h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala04%2D16h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 4 - 17h": "",
+
+      "Remarcações 5 - 13h": "",
+      "Remarcações 5 - 14h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala05-14h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala05%2D14h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 5 - 15h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala05-15h/Documentos%20Compartilhados/Forms/AllItems.aspx?FolderCTID=0x01200042310D0D496FF741A91F25109D7F72F2&id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala05%2D15h%2FDocumentos%20Compartilhados%2FRecordings&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 5 - 16h": "https://tjdf.sharepoint.com/sites/CEJUSCJECBSBsala17eSeguintes-5NUV-Remarcaes-Sala05-16h/Documentos%20Compartilhados/Forms/AllItems.aspx?id=%2Fsites%2FCEJUSCJECBSBsala17eSeguintes%2D5NUV%2DRemarcaes%2DSala05%2D16h%2FDocumentos%20Compartilhados%2FGrava%C3%A7%C3%B5es&sortField=Modified&isAscending=false&viewid=7e46b66a%2D759a%2D4de8%2D8771%2D0f12ff5fcb32",
+      "Remarcações 5 - 17h": ""
+    };
+    // ==============================================================================
+
+    // utilidades
+    const $ = id => document.getElementById(id);
+    const toastContainer = $('toastContainer');
+
+    function showToast(msg, timeout = 2400) {
+      const el = document.createElement('div');
+      el.className = 'toast bg-gray-900 text-white px-4 py-2 rounded shadow mb-2';
+      el.textContent = msg;
+      toastContainer.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(0)'; }, timeout - 150);
+      setTimeout(() => { el.remove(); }, timeout);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const dropdown = $('salaDropdown');
+      const search = $('search');
+      const salaLink = $('salaLink');
+      const linkContainer = $('linkContainer');
+      const copyBtn = $('copyBtn');
+      const statusText = $('statusText');
+
+      const REV_KEY = 'salas_reviewed_v1';
+
+      function readReviewed() { try { return JSON.parse(localStorage.getItem(REV_KEY) || '[]'); } catch(e){ return []; } }
+      function writeReviewed(v){ localStorage.setItem(REV_KEY, JSON.stringify(v)); }
+
+      // montar grupos simples (por prefixo antes do " - ")
+      const groups = {};
+      Object.keys(salaLinks).forEach(k => {
+        const prefix = (k.split(' - ')[0] || 'Outros').trim();
+        groups[prefix] = groups[prefix] || [];
+        groups[prefix].push({ label: k, link: salaLinks[k] });
+      });
+
+      function renderOptions(filter = '') {
+        dropdown.innerHTML = '';
+
+        // placeholder inicial (opção não selecionável)
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = '-- Escolha uma sala --';
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        dropdown.appendChild(placeholder);
+
+        Object.entries(groups).forEach(([groupName, items]) => {
+          // filtra os itens conforme pesquisa
+          const filteredItems = filter
+            ? items.filter(i => i.label.toLowerCase().includes(filter.toLowerCase()))
+            : items;
+
+          if (filteredItems.length === 0) return; // não mostra grupo vazio
+
+          // optgroup visual (disabled option)
+          const groupOpt = document.createElement('option');
+          groupOpt.disabled = true;
+          groupOpt.textContent = `── ${groupName} ──`;
+          groupOpt.className = 'group-label';
+          dropdown.appendChild(groupOpt);
+
+          // ordena alfabeticamente
+          const sorted = [...filteredItems].sort((a,b) => a.label.localeCompare(b.label, 'pt-BR'));
+
+          sorted.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.link || '';
+            opt.textContent = item.label;
+            opt.dataset.label = item.label;
+            opt.dataset.link = item.link || '';
+            opt.disabled = !item.link;
+
+            if (!item.link) {
+              opt.textContent += ' — (desabilitada)';
+              opt.classList.add('sem-gravacao'); // aplica cinza
+            }
+
+            // cor por paridade de número (heurística)
+            const nums = item.label.match(/\d+/g);
+            const num = nums ? parseInt(nums[0],10) : 0;
+            if (num % 2 === 1) opt.classList.add('sala-impar'); else opt.classList.add('sala-par');
+
+            if (readReviewed().includes(item.label)) opt.textContent = '✓ ' + opt.textContent;
+            dropdown.appendChild(opt);
+          });
+        });
+
+        // se filtro, selecionar o primeiro item disponível
+        if (filter) {
+          const first = Array.from(dropdown.options).find(o => !o.disabled && !o.textContent.startsWith('──'));
+          if (first) dropdown.selectedIndex = Array.from(dropdown.options).indexOf(first);
+          else dropdown.selectedIndex = 0;
+        } else {
+          dropdown.selectedIndex = 0;
+        }
+
+        updateUIForSelection();
+      }
+
+      function updateUIForSelection() {
+        const sel = dropdown.options[dropdown.selectedIndex];
+        if (!sel || sel.disabled || sel.textContent.startsWith('──') || !sel.dataset || !sel.dataset.label) {
+          linkContainer.classList.add('hidden');
+          salaLink.href = '#';
+          statusText.textContent = '';
+          return;
+        }
+        const label = sel.dataset.label;
+        const link = sel.dataset.link;
+        salaLink.href = link;
+        salaLink.textContent = 'Clique aqui para acessar pasta da gravação';
+        linkContainer.classList.remove('hidden');
+
+        // checa disponibilidade heurística
+        const lower = (link||'').toLowerCase();
+        if (!link) {
+          statusText.textContent = 'Sem link disponível';
+        } else if (lower.includes('sharepoint') || lower.includes('tjdf') || lower.includes('intranet')) {
+         // statusText.textContent = 'Link do SharePoint / Intranet — pode requerer autenticação.';
+        } else {
+          (async () => {
+            try {
+              const controller = new AbortController();
+              const timeout = setTimeout(()=>controller.abort(), 2500);
+              const res = await fetch(link, { method: 'HEAD', signal: controller.signal, mode: 'no-cors' });
+              clearTimeout(timeout);
+              statusText.textContent = (res && (res.ok || res.type === 'opaque' || res.status === 0)) ? 'Link acessível (aprox.)' : `HTTP ${res.status}`;
+            } catch (e) {
+              statusText.textContent = 'Não foi possível verificar (CORS / rede).';
+            }
+          })();
+        }
+      }
+
+      // eventos
+      dropdown.addEventListener('change', updateUIForSelection);
+
+      // busca
+      search.addEventListener('input', (e) => {
+        renderOptions(e.target.value.trim());
+      });
+
+      // ao apertar Enter dentro da caixa de busca: seleciona primeiro resultado válido
+      document.addEventListener('keydown', (e) => {
+        const active = document.activeElement;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+          if (e.key === 'Enter' && active.id === 'search') {
+            const first = Array.from(dropdown.options).find(o => !o.disabled && !o.textContent.startsWith('──'));
+            if (first) dropdown.selectedIndex = Array.from(dropdown.options).indexOf(first);
+            updateUIForSelection();
+          }
+          return;
+        }
+      });
+
+      // copiar link
+      copyBtn.addEventListener('click', async () => {
+        const opt = dropdown.options[dropdown.selectedIndex];
+        if (!opt || !opt.dataset.link) return showToast('Nenhum link selecionado');
+        try {
+          await navigator.clipboard.writeText(opt.dataset.link);
+          showToast('Link copiado');
+        } catch (e) {
+          const ta = document.createElement('textarea');
+          ta.value = opt.dataset.link;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+          showToast('Link copiado (fallback)');
+        }
+      });
+
+      // inicial render
+      renderOptions();
+    });
+  </script>
+</body>
+</html>
+
