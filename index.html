@@ -75,10 +75,12 @@
 
     <!-- Container do link (abaixo do dropdown) -->
     <div id="linkContainer" class="mt-4 hidden p-3 bg-gray-50 rounded-lg border border-gray-300 text-left transition-opacity duration-300">
+      <div class="mt-3 flex gap-2 justify-center">
       <a id="salaLink" href="#" target="_blank" rel="noopener"
-        class="block w-full text-center text-blue-600 font-semibold break-link hover:underline transition-all">
-        Clique aqui para acessar pasta da gravação.
+        
+       <button id="copyBtn2" class="btn-copy text-sm">📂 Acessar a pasta</button>
       </a>
+      </div>
 
       <div class="mt-3 flex gap-2 justify-center">
         <button id="copyBtn" class="btn-copy text-sm">📋 Copiar link da pasta</button>
@@ -364,7 +366,7 @@
         const label = sel.dataset.label;
         const link = sel.dataset.link;
         salaLink.href = link;
-        salaLink.textContent = 'Clique aqui para acessar pasta da gravação';
+        salaLink.textContent = '📂 Acessar a pasta';
         linkContainer.classList.remove('hidden');
 
         // checa disponibilidade heurística
@@ -433,4 +435,5 @@
   </script>
 </body>
 </html>
+
 
